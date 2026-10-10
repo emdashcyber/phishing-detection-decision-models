@@ -10,7 +10,7 @@ import { SITE_NAME, AUTHOR, ARTICLE_PATH, PUBLISHED, OG_IMAGE, abs, organization
 
 const { flash, openai, jev, clef, ms } = byKey;
 const ranked = [...models].sort((a, b) => b.accuracy - a.accuracy);
-const title = 'I tested five decision models on 1,000 phishing and legitimate emails';
+const title = 'I tested 5 AI decision models on 1,000 emails for phishing detection';
 const seoTitle = 'Phishing Email Detection with Decision Models: 5 Models Compared | EmDash Cyber';
 const description = `Five decision models scored ${fmt.pct(ms.accuracy)}–${fmt.pct(flash.accuracy)} on 1,000 emails. Their false alarms, misses, confidence, latency and cost differed. Data included.`;
 const sole = agreement.soleMiss;
@@ -72,9 +72,19 @@ const jsonLd = {
     <h1>{title}</h1>
 
     <p class="lede">
-      I sent the same 1,000 emails, 500 phishing and 500 legitimate, to five <em>decision models</em> and asked one question:
-      is this phishing? An AI decision model is a specialised model to make decisions with structured output. You give it a 
-      question with named choices and it returns a choice plus a probability for each. 
+      I sent the same 1,000 emails, 500 phishing and 500 legitimate, to five *decision models* and asked one question: is this phishing?
+    </p>
+    <p class="lede">
+      An AI decision model is a specialised model designed to make decisions with structured output. You give it a question with named choices, and it returns a choice plus a probability for each.
+    </p>
+    <p class="lede">
+      Phishing detection is an interesting use case because the consequences of getting it wrong are asymmetric. Missing a phishing email can expose users to credential theft or malware, while incorrectly flagging a legitimate email can disrupt business communications. Decision models offer a way to make structured classifications with associated probabilities, making them potentially useful for workflows where confidence thresholds, latency and inference cost matter.
+    </p>
+    <p class="lede">
+      This benchmark uses a balanced, historical dataset to compare how different decision models handle the same classification task. It is not intended to measure real-world phishing detection effectiveness. Production inboxes typically contain a much lower proportion of phishing emails, and modern attacks may differ from those represented in the dataset.
+    </p>
+    <p class="lede">
+      The goal is not to determine whether decision models can replace existing email security systems, but to understand how they compare with each other across accuracy, confidence calibration, speed and cost.
     </p>
 
     <section class="tldr" aria-labelledby="tldr">
@@ -106,7 +116,7 @@ const jsonLd = {
     </p>
     <ul>
       <li>
-        <strong>Sample Data: </strong> 500 phishing and 500 legitimate emails from from the <a href="https://huggingface.co/datasets/kudzaiprichard/aura-phishing-email-corpus">AURA Phishing Email Corpus</a> dataset.
+        <strong>Sample Data: </strong> 500 phishing and 500 legitimate emails from the <a href="https://huggingface.co/datasets/kudzaiprichard/aura-phishing-email-corpus">AURA Phishing Email Corpus</a> dataset.
       </li>
       <li>
         <strong>Input:</strong> Sender, subject and body only. 
@@ -136,8 +146,8 @@ const jsonLd = {
       </li>
     </ul>
     <p>
-      Laya and Clef-omni was considered but ruled out. Laya is not available through OpenRouter, and Clef-omni was only avaliable via the Cloudflare provider. 
-      For my test run Clef and Clef flash models were served via PrimeIntellect NOT Cloudflare as Cloudflare does not offer Zero Data Rentention (ZDR) and rotains prompt logs. 
+      Laya and Clef-omni were considered but ruled out. Laya is not available through OpenRouter, and Clef-omni was only available via the Cloudflare provider. 
+      For my test run Clef and Clef flash models were served via PrimeIntellect NOT Cloudflare as Cloudflare does not offer Zero Data Retention (ZDR) and retains prompt logs. 
       I felt ZDR is important to consider as emails contain sensitive information and not something that should be logged if this solution was used in production.
     </p>
     <details>
@@ -151,6 +161,12 @@ const jsonLd = {
     <figure class="wide">
       <ResultsTable />
     </figure>
+    <p>
+      Although Clef Flash achieved the highest observed accuracy at 99.2%, the difference compared with GPT-6 Luna Decisions at 98.9% represents just 
+      three additional correct classifications out of 1,000 emails. This is a small difference on a single dataset and should not be interpreted 
+      as evidence that one model is consistently more accurate than the other. A larger and more diverse evaluation, ideally with repeated runs and 
+      statistical significance testing, would be needed to establish whether these differences generalise.
+    </p>
     <IntervalChart />
     <div class="callout">
       <strong>"Accuracy" means agreement with the dataset's labels.</strong>
@@ -337,7 +353,9 @@ const jsonLd = {
         <strong>Labels are unverified.</strong> No human reviewed the dataset labels or model errors as part of this benchmark.
       </li>
       <li>
-        <strong>The sample is 50/50.</strong> An inbox with a lower phishing prevalence will have a different precision even if recall and specificity stay constant. False-alarm counts also depend on email volume. Recall and specificity are less directly affected by prevalence, but can change with the population and attack mix; they also need validation on representative data.
+        <strong>Balanced dataset.</strong> The dataset contains equal numbers of phishing and legitimate emails, which is unlikely to reflect real-world inbox traffic. When phishing emails are relatively rare, 
+        even a small false-positive rate can result in a significant proportion of flagged emails being legitimate. For example, consider an inbox of 10,000 emails where only 1% are phishing. Even with 99% recall and 
+        99% specificity, approximately half of the emails flagged as phishing would be legitimate. This illustrates why high accuracy on a balanced dataset does not necessarily translate into high precision in production.
       </li>
       <li>
         <strong>The corpus is old.</strong> The <a href="https://zenodo.org/records/8339691">original dataset collection</a> spans 1995–2022; that range describes the collection, not necessarily this file.

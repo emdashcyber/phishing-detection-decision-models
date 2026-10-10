@@ -1,0 +1,44 @@
+---
+import { models, fmt } from '../lib/data';
+
+const rows = [...models].sort((a, b) => b.accuracy - a.accuracy);
+const best = {
+  accuracy: Math.max(...models.map((m) => m.accuracy)),
+  recall: Math.max(...models.map((m) => m.recall)),
+  specificity: Math.max(...models.map((m) => m.specificity)),
+  medianMs: Math.min(...models.map((m) => m.medianMs)),
+  p95Ms: Math.min(...models.map((m) => m.p95Ms)),
+  costPer1k: Math.min(...models.map((m) => m.costPer1k)),
+};
+const cls = (a: number, b: number) => (a === b ? 'best' : undefined);
+---
+
+<p class="table-hint" aria-hidden="true">Scroll to compare all columns →</p>
+<div class="table-scroll" role="region" aria-label="Benchmark results" tabindex="0">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Model</th>
+        <th scope="col">Accuracy</th>
+        <th scope="col">Recall</th>
+        <th scope="col">Specificity</th>
+        <th scope="col">Median</th>
+        <th scope="col">p95</th>
+        <th scope="col">Cost / 1k</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((m) => (
+        <tr>
+          <th scope="row"><span class={`dot c-${m.key}`} aria-hidden="true"></span>{m.short}</th>
+          <td class={cls(m.accuracy, best.accuracy)}>{fmt.pct(m.accuracy)}</td>
+          <td class={cls(m.recall, best.recall)}>{fmt.pct(m.recall)}</td>
+          <td class={cls(m.specificity, best.specificity)}>{fmt.pct(m.specificity)}</td>
+          <td class={cls(m.medianMs, best.medianMs)}>{fmt.ms(m.medianMs)}</td>
+          <td class={cls(m.p95Ms, best.p95Ms)}>{fmt.ms(m.p95Ms)}</td>
+          <td class={cls(m.costPer1k, best.costPer1k)}>{fmt.usd(m.costPer1k)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

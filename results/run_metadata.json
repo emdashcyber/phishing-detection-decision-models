@@ -1,0 +1,102 @@
+{
+  "benchmark": "email phishing decision models",
+  "created_at_utc": "2026-10-10T03:17:30.013+00:00",
+  "dataset_id": "kudzaiprichard/aura-phishing-email-corpus",
+  "dataset_file": "Nazario_5.csv",
+  "dataset_url": "https://huggingface.co/datasets/kudzaiprichard/aura-phishing-email-corpus/resolve/main/Nazario_5.csv",
+  "dataset_file_sha256": "afef69828165619ced6661ca14a95444a1db82c7b25ae9c2619bbbb108844a44",
+  "sampling_seed": 20261010,
+  "sample_per_class": 500,
+  "expected_sample_count": 1000,
+  "expected_logical_calls": 5000,
+  "eligible_row_counts_and_exclusions": {
+    "rows": 3065,
+    "invalid_label": 0,
+    "missing_required_fields": 53,
+    "eligible_phishing": 1559,
+    "eligible_legitimate": 1453,
+    "missing_by_field": {
+      "sender": 2,
+      "subject": 50,
+      "body": 2
+    },
+    "sha256_file": "afef69828165619ced6661ca14a95444a1db82c7b25ae9c2619bbbb108844a44"
+  },
+  "model_ids": [
+    "typesafe/jev-1.13",
+    "openai/gpt-6-luna-decisions",
+    "cloudflare/clef",
+    "cloudflare/clef-flash",
+    "microsoft/microsoft-decision-1"
+  ],
+  "model_price_snapshot": {
+    "typesafe/jev-1.13": {
+      "input_per_token": 4.2000000000000006e-08,
+      "output_per_token": 0.0,
+      "fallback_input_per_million": 0.042,
+      "fallback_output_per_million": 0.0,
+      "source": "plan price snapshot fallback (2026-10-10)",
+      "snapshot_at_utc": "2026-10-10T03:14:39.181+00:00",
+      "catalog_error": null
+    },
+    "openai/gpt-6-luna-decisions": {
+      "input_per_token": 1.0000000000000001e-07,
+      "output_per_token": 0.0,
+      "fallback_input_per_million": 0.1,
+      "fallback_output_per_million": 0.0,
+      "source": "plan price snapshot fallback (2026-10-10)",
+      "snapshot_at_utc": "2026-10-10T03:14:39.181+00:00",
+      "catalog_error": null
+    },
+    "cloudflare/clef": {
+      "input_per_token": 2.4e-07,
+      "output_per_token": 0.0,
+      "fallback_input_per_million": 0.24,
+      "fallback_output_per_million": 0.0,
+      "source": "plan price snapshot fallback (2026-10-10)",
+      "snapshot_at_utc": "2026-10-10T03:14:39.181+00:00",
+      "catalog_error": null
+    },
+    "cloudflare/clef-flash": {
+      "input_per_token": 3.7999999999999996e-08,
+      "output_per_token": 0.0,
+      "fallback_input_per_million": 0.038,
+      "fallback_output_per_million": 0.0,
+      "source": "plan price snapshot fallback (2026-10-10)",
+      "snapshot_at_utc": "2026-10-10T03:14:39.181+00:00",
+      "catalog_error": null
+    },
+    "microsoft/microsoft-decision-1": {
+      "input_per_token": 4.2000000000000006e-08,
+      "output_per_token": 0.0,
+      "fallback_input_per_million": 0.042,
+      "fallback_output_per_million": 0.0,
+      "source": "plan price snapshot fallback (2026-10-10)",
+      "snapshot_at_utc": "2026-10-10T03:14:39.181+00:00",
+      "catalog_error": null
+    }
+  },
+  "decision_endpoint": "https://openrouter.ai/api/alpha/decisions",
+  "request_state_fields": [
+    "sender",
+    "subject",
+    "body"
+  ],
+  "body_urls_preserved": true,
+  "separate_urls_field_sent": false,
+  "human_review_performed": false,
+  "api_key_present": true,
+  "latency_definition": "Wall clock from first request to final response within the invocation that produced the decision; failed attempts from earlier resumptions are retained in attempt history, not added to latency.",
+  "request_policy": {
+    "parallel_calls_per_email": 5,
+    "max_attempts_including_initial": 3,
+    "retry_http_statuses": [
+      429,
+      500,
+      502,
+      503,
+      504
+    ],
+    "timeout_seconds": 90
+  }
+}

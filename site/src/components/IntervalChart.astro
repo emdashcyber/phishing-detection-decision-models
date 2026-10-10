@@ -1,0 +1,30 @@
+---
+import { models, fmt } from '../lib/data';
+
+const rows = [...models].sort((a, b) => b.accuracy - a.accuracy);
+const lo = 0.96;
+const hi = 1.0;
+const pos = (v: number) => ((v - lo) / (hi - lo)) * 100;
+const ticks = [0.96, 0.97, 0.98, 0.99, 1.0];
+---
+
+<figure class="wide">
+  <figcaption>Accuracy with 95% Wilson interval (n = 1,000 each)</figcaption>
+  <div class="rows" role="img" aria-label={`Accuracy with 95% intervals: ${rows.map((m) => `${m.short} ${fmt.pct(m.accuracy)}, ${fmt.pct(m.accuracyCI[0])} to ${fmt.pct(m.accuracyCI[1])}`).join('; ')}`}>
+    {rows.map((m) => (
+      <div class={`row c-${m.key}`}>
+        <span class="label">{m.short}</span>
+        <div class="track">
+          <div class="range" style={`left:${pos(m.accuracyCI[0])}%;width:${pos(m.accuracyCI[1]) - pos(m.accuracyCI[0])}%`}></div>
+          <div class="pt" style={`left:${pos(m.accuracy)}%`}></div>
+        </div>
+        <span class="val">{fmt.pct(m.accuracy)}</span>
+      </div>
+    ))}
+  </div>
+  <div class="axis" aria-hidden="true">
+    <span></span>
+    <div class="ticks">{ticks.map((t) => <span style={`left:${pos(t)}%`}>{(t * 100).toFixed(0)}%</span>)}</div>
+    <span></span>
+  </div>
+</figure>

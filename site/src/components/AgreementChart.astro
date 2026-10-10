@@ -1,0 +1,20 @@
+---
+import { agreement } from '../lib/data';
+
+const rows = [4, 3, 2, 1, 0].map((k) => ({ correct: k, n: agreement.histogram[k] }));
+const max = Math.max(...rows.map((r) => r.n));
+const label = (k: number) => (k === 0 ? 'None of the five right' : `${k} of 5 right`);
+---
+
+<figure class="wide agree">
+  <figcaption>Emails by number of models that got them right (excluding the {agreement.unanimousCorrect} everyone got right)</figcaption>
+  <div class="rows" role="img" aria-label={rows.map((r) => `${label(r.correct)}: ${r.n} emails`).join('; ')}>
+    {rows.map((r) => (
+      <div class="row">
+        <span class="label">{label(r.correct)}</span>
+        <div class="hbar-wrap"><div class={`hbar${r.correct === 0 ? ' bad' : ''}`} style={`width:${(r.n / max) * 100}%`}></div></div>
+        <span class="val">{r.n}</span>
+      </div>
+    ))}
+  </div>
+</figure>

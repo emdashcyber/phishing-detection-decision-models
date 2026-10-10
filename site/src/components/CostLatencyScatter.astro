@@ -1,0 +1,49 @@
+---
+import { models, fmt } from '../lib/data';
+
+interface Props {
+  xKey: 'costPer1k' | 'medianMs';
+  xMin: number;
+  xMax: number;
+  xTicks: number[];
+  xFmt: (v: number) => string;
+  xTitle: string;
+  caption: string;
+}
+const { xKey, xMin, xMax, xTicks, xFmt, xTitle, caption } = Astro.props;
+
+const yMin = 0.97;
+const yMax = 0.995;
+const yTicks = [0.97, 0.975, 0.98, 0.985, 0.99, 0.995];
+const px = (v: number) => ((v - xMin) / (xMax - xMin)) * 100;
+const py = (v: number) => (1 - (v - yMin) / (yMax - yMin)) * 100;
+---
+
+<figure class="wide scatter-wrap">
+  <figcaption>{caption}</figcaption>
+  <div class="scatter" role="img" aria-label={`${caption}: ${models.map((m) => `${m.short} ${fmt.pct(m.accuracy)} at ${xKey === 'costPer1k' ? fmt.usd(m[xKey]) : fmt.ms(m[xKey])}`).join('; ')}`}>
+    {yTicks.map((t) => (
+      <>
+        <div class="gl" style={`top:${py(t)}%`}></div>
+        <span class="yl" style={`top:${py(t)}%`}>{(t * 100).toFixed(1)}%</span>
+      </>
+    ))}
+    {xTicks.map((t) => <span class={`xl${t === xMax ? ' end' : ''}`} style={`left:${px(t)}%`}>{xFmt(t)}</span>)}
+    {models.map((m, index) => {
+      const x = px(m[xKey]);
+      const y = py(m.accuracy);
+      const left = x > 62;
+      return (
+        <>
+          <span class={`p c-${m.key}${m.pareto ? ' front' : ''}`} style={`left:${x}%;top:${y}%`}>{index + 1}</span>
+          <span class="pl" style={`top:${y}%;${left ? `right:calc(${100 - x}% + 16px)` : `left:calc(${x}% + 16px)`}`}>{m.short}</span>
+        </>
+      );
+    })}
+  </div>
+  <div class="xt">{xTitle}</div>
+  <ol class="plot-key" aria-label="Chart key">
+    {models.map((m, index) => <li><span class={`key-number c-${m.key}`}>{index + 1}</span><span>{m.short}<small>{fmt.pct(m.accuracy)} · {xKey === 'costPer1k' ? fmt.usd(m[xKey]) : fmt.ms(m[xKey])}</small></span></li>)}
+  </ol>
+  <p class="chart-note">Outlined points are Pareto-efficient across accuracy, median latency and recorded cost. Recall and reliability are excluded.</p>
+</figure>

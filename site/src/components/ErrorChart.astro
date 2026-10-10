@@ -1,0 +1,26 @@
+---
+import { models } from '../lib/data';
+
+const rows = [...models].sort((a, b) => b.accuracy - a.accuracy);
+const max = Math.max(...models.flatMap((m) => [m.fp, m.fn]));
+const w = (n: number) => (n / max) * 80;
+---
+
+<figure class="wide errors">
+  <figcaption>Wrong answers per model, out of 500 benign and 500 phishing emails</figcaption>
+  <div class="legend">
+    <span><i style="background:var(--false-alarm)"></i>False alarm: benign flagged as phishing</span>
+    <span><i style="background:var(--miss)"></i>Miss: phishing called benign</span>
+  </div>
+  <div class="rows" role="img" aria-label={`False alarms and misses: ${rows.map((m) => `${m.short} ${m.fp} false alarms, ${m.fn} misses`).join('; ')}`}>
+    {rows.map((m) => (
+      <div class="row">
+        <span class="label">{m.short}</span>
+        <div class="diverge">
+          <div class="l"><span class="n">{m.fp}</span><div class="bar fp" style={`width:${w(m.fp)}%`}></div></div>
+          <div class="r"><div class="bar fn" style={`width:${w(m.fn)}%`}></div><span class="n">{m.fn}</span></div>
+        </div>
+      </div>
+    ))}
+  </div>
+</figure>

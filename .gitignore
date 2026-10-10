@@ -1,0 +1,5 @@
+# Public raw email corpus includes real names/addresses and malicious URLs.
+/data/Nazario_5.csv
+/data/*.part
+__pycache__/
+*.py[cod]

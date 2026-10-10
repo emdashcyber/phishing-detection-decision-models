@@ -72,7 +72,7 @@ const jsonLd = {
     <h1>{title}</h1>
 
     <p class="lede">
-      I sent the same 1,000 emails, 500 phishing and 500 legitimate, to five *decision models* and asked one question: is this phishing?
+      I sent the same 1,000 emails, 500 phishing and 500 legitimate, to five <em>decision models</em> and asked one question: is this phishing?
     </p>
     <p class="lede">
       An AI decision model is a specialised model designed to make decisions with structured output. You give it a question with named choices, and it returns a choice plus a probability for each.
@@ -147,7 +147,7 @@ const jsonLd = {
     </ul>
     <p>
       Laya and Clef-omni were considered but ruled out. Laya is not available through OpenRouter, and Clef-omni was only available via the Cloudflare provider. 
-      For my test run Clef and Clef flash models were served via PrimeIntellect NOT Cloudflare as Cloudflare does not offer Zero Data Retention (ZDR) and retains prompt logs. 
+      For this benchmark, Clef and Clef Flash were served via PrimeIntellect rather than Cloudflare, as Cloudflare does not offer Zero Data Retention (ZDR) and retains prompt logs. 
       I felt ZDR is important to consider as emails contain sensitive information and not something that should be logged if this solution was used in production.
     </p>
     <details>
@@ -171,7 +171,7 @@ const jsonLd = {
     <div class="callout">
       <strong>"Accuracy" means agreement with the dataset's labels.</strong>
       <p>
-        The dataset's label was taken as the truth, I did not perform a human review of the datasets assigned label on each email. 
+        I treated the dataset's labels as ground truth and did not independently verify them through human review.
       </p>
     </div>
 

@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { SITE_NAME, OG_IMAGE, AUTHOR, abs, withBase, ARTICLE_PATH } from '../lib/site';
+import { SITE_NAME, OG_IMAGE, AUTHOR, abs, withBase } from '../lib/site';
 
 interface Props {
   title: string;
@@ -27,21 +27,25 @@ const indexable = kind !== 'error';
 const canonical = indexable ? abs(path) : undefined;
 const image = indexable ? abs(OG_IMAGE) : undefined;
 const ld = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') : undefined;
+const year = new Date().getFullYear();
+// GitHub Pages cannot send headers, so the policy ships as a meta tag; dev tooling needs inline scripts.
+const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'self'; form-action 'none'";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
   <head>
     <meta charset="utf-8" />
+    {import.meta.env.PROD && <meta http-equiv="Content-Security-Policy" content={csp} />}
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{seoTitle}</title>
     <meta name="description" content={description} />
     <meta name="author" content={AUTHOR} />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a1420" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
     <script is:inline src={withBase('/theme.js')}></script>
-    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+    <link rel="icon" href={withBase('/emdash-mark.svg')} type="image/svg+xml" />
     <link rel="icon" href={withBase('/favicon-32.png')} type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
     {indexable ? <meta name="robots" content="index,follow,max-image-preview:large" /> : <meta name="robots" content="noindex" />}
@@ -49,7 +53,7 @@ const ld = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') : undefined;
     {indexable && (
       <>
         <meta property="og:site_name" content={SITE_NAME} />
-        <meta property="og:locale" content="en_GB" />
+        <meta property="og:locale" content="en_AU" />
         <meta property="og:type" content={kind === 'article' ? 'article' : 'website'} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
@@ -77,22 +81,35 @@ const ld = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') : undefined;
     {ld && <script type="application/ld+json" set:html={ld} />}
   </head>
   <body>
-    <a class="skip" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
-      <a class="brand" href={withBase('/')}>
-        <img src={withBase('/emdash-mark.svg')} alt="" width="30" height="30" />
-        <span>{SITE_NAME}</span>
-      </a>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" hidden>
-        <span class="theme-icon" aria-hidden="true"></span>
-        <span>Dark mode</span>
-      </button>
+      <div class="site-header-inner">
+        <a class="brand" href="https://emdashcyber.com/">
+          <img src={withBase('/emdash-mark.svg')} alt="" width="26" height="26" />
+          <span>{SITE_NAME}</span>
+        </a>
+        <nav class="crumb" aria-label="Breadcrumb">/ <a href={withBase('/')}>Phishing research</a></nav>
+        <div class="header-actions">
+          <a class="header-link" href="https://github.com/emdashcyber/phishing-detection-decision-models">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" /></svg>
+            <span>GitHub</span>
+          </a>
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20.9 13.1A8.5 8.5 0 0 1 10.9 3.1a8.5 8.5 0 1 0 10 10Z" /></svg>
+            <span>Dark Mode</span>
+          </button>
+        </div>
+      </div>
     </header>
-    <main id="main" tabindex="-1"><slot /></main>
+    <main id="main" class="page" tabindex="-1"><slot /></main>
     <footer class="site-footer">
-      <p class="footer-line">
-        <a class="brand" href={ARTICLE_PATH}><img src={withBase('/emdash-mark.svg')} alt="" width="22" height="22" /><span>{SITE_NAME}</span></a>
-      </p>
+      <div class="site-footer-inner">
+        <a class="brand footer-brand" href="https://emdashcyber.com/">
+          <img src={withBase('/emdash-mark.svg')} alt="" width="22" height="22" />
+          <span>{SITE_NAME}</span>
+        </a>
+        <span>&copy; {year} {SITE_NAME}</span>
+      </div>
     </footer>
   </body>
 </html>

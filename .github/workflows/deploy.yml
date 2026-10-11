@@ -36,8 +36,8 @@ jobs:
         run: npm ci
         working-directory: site
 
-      - name: Build Astro site
-        run: npm run build
+      - name: Build and verify Astro site
+        run: npm run check
         working-directory: site
 
       - name: Upload Pages artifact

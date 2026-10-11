@@ -5,8 +5,15 @@ import { readFileSync, existsSync } from 'node:fs';
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const SITE = 'https://emdashcyber.com';
 const SLUG = 'phishing-detection-decision-models';
-const ARTICLE = `../dist/${SLUG}/index.html`;
+const ARTICLE = '../dist/index.html';
+const NOT_FOUND = '../dist/404.html';
 const textOf = (html) => html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
+const deployedFile = (path) => {
+  const prefix = `/${SLUG}`;
+  const localPath = path.startsWith(`${prefix}/`) ? path.slice(prefix.length) : path;
+  const filePath = localPath.endsWith('/') ? `${localPath}index.html` : localPath;
+  return new URL(`../dist${filePath}`, import.meta.url);
+};
 
 const [head, ...body] = read('../src/data/model_summary.csv').trim().split(/\r?\n/);
 const cols = head.split(',');
@@ -49,7 +56,7 @@ test('committed data matches ../results when present', () => {
 
 test('article has key figures and caveats', () => {
   const text = textOf(read(ARTICLE));
-  for (const v of ['99.2%', '97.4%', '377 ms', '$0.0297', '41 HTTP 429s', '36 emails', '$0.37', 'human_verified=false', 'not a paired test', 'lower bound', 'The labels weren']) {
+  for (const v of ['99.2%', '97.4%', '377 ms', '$0.0297', '41 HTTP 429s', '36 emails', '$0.37', 'Labels are unverified', 'no paired significance test', 'Balanced dataset.']) {
     assert.ok(text.includes(v), v);
   }
 });
@@ -72,7 +79,7 @@ test('editorial figures match recorded attempts, confidence and agreement', () =
     assert.equal(errors.filter((p) => p.confidence >= 0.9).length, high);
   }
   const text = textOf(read(ARTICLE));
-  for (const phrase of ['5,041 recorded HTTP attempts', '10 October 2026', 'review volume', 'population and attack mix', 'recorded cost of about']) assert.ok(text.includes(phrase), phrase);
+  for (const phrase of ['5,000 completed decisions', 'review volume', 'balanced, historical dataset', 'recorded cost of about']) assert.ok(text.includes(phrase), phrase);
 });
 
 test('public downloads exclude email text and request IDs', () => {
@@ -90,25 +97,26 @@ const meta = (html, attr, name) => html.match(new RegExp(`<meta[^>]*${attr}="${n
 test('article SEO: title, canonical, Open Graph, Twitter and robots', () => {
   const html = read(ARTICLE);
   const url = `${SITE}/${SLUG}/`;
-  const title = 'I tested five decision models on 1,000 phishing and legitimate emails';
+  const title = 'I tested 5 AI decision models on 1,000 emails for phishing detection';
   assert.match(html, /<title>Phishing Email Detection with Decision Models: 5 Models Compared \| EmDash Cyber<\/title>/);
   assert.ok(html.includes(`<link rel="canonical" href="${url}"`));
   assert.equal(meta(html, 'property', 'og:url'), url);
   assert.equal(meta(html, 'property', 'og:type'), 'article');
   assert.equal(meta(html, 'property', 'og:title'), title);
-  assert.equal(meta(html, 'property', 'og:image'), `${SITE}/social-preview.png`);
+  assert.equal(meta(html, 'property', 'og:image'), `${SITE}/${SLUG}/social-preview.png`);
   assert.equal(meta(html, 'property', 'og:image:width'), '1200');
   assert.equal(meta(html, 'property', 'og:image:height'), '630');
   assert.ok(meta(html, 'property', 'og:image:alt'));
   assert.equal(meta(html, 'name', 'twitter:card'), 'summary_large_image');
-  assert.equal(meta(html, 'name', 'twitter:image'), `${SITE}/social-preview.png`);
+  assert.equal(meta(html, 'name', 'twitter:image'), `${SITE}/${SLUG}/social-preview.png`);
   assert.equal(meta(html, 'property', 'article:published_time'), '2026-10-10');
   const desc = meta(html, 'name', 'description');
   assert.ok(desc.length >= 100 && desc.length <= 160, `description length ${desc.length}`);
   assert.ok(title.length <= 80, 'headline fits HN limit');
   assert.ok(!html.includes('content="noindex"'));
   assert.equal([...html.matchAll(/<h1[\s>]/g)].length, 1);
-  assert.ok(html.includes('<html lang="en">'));
+  assert.ok(html.includes('<html lang="en-AU">'));
+  assert.equal(meta(html, 'property', 'og:locale'), 'en_AU');
   assert.ok(existsSync(new URL('../dist/social-preview.png', import.meta.url)));
 });
 
@@ -118,75 +126,108 @@ test('JSON-LD parses and describes the article, breadcrumb and dataset', () => {
   assert.ok(raw, 'json-ld present');
   const graph = JSON.parse(raw)['@graph'];
   const types = graph.map((n) => n['@type']);
-  for (const t of ['Organization', 'Person', 'TechArticle', 'BreadcrumbList', 'Dataset']) assert.ok(types.includes(t), t);
+  for (const t of ['Organization', 'Person', 'TechArticle', 'Dataset']) assert.ok(types.includes(t), t);
   const article = graph.find((n) => n['@type'] === 'TechArticle');
   assert.equal(article.url, `${SITE}/${SLUG}/`);
   assert.ok(article.headline.length <= 110);
+  const organization = graph.find((n) => n['@type'] === 'Organization');
+  assert.equal(organization.url, `${SITE}/`);
+  assert.equal(organization['@id'], `${SITE}/#organization`);
   assert.equal(graph.find((n) => n['@type'] === 'Person').name, 'Gavin Eke');
 });
 
-test('home page is indexable with its own canonical and no article metadata', () => {
-  const html = read('../dist/index.html');
-  assert.ok(html.includes(`<link rel="canonical" href="${SITE}/"`));
-  assert.equal(meta(html, 'property', 'og:type'), 'website');
-  assert.ok(html.includes(`href="/${SLUG}/"`));
-  assert.ok(!html.includes('article:published_time'));
-  assert.match(html, /<h1 id="site-title">EmDash Cyber<\/h1>/);
-  assert.match(html, /<h2 id="posts-title">Posts<\/h2>/);
-});
-
-test('header holds only the brand and theme toggle', () => {
-  for (const file of ['../dist/index.html', ARTICLE, '../dist/404.html']) {
+test('header uses the shared brand, project, source and theme controls', () => {
+  for (const file of [ARTICLE, NOT_FOUND]) {
     const header = read(file).match(/<header class="site-header">([\s\S]*?)<\/header>/)[1];
     assert.ok(header.includes('EmDash Cyber'));
-    assert.ok(!header.includes('<nav'), file);
-    assert.equal([...header.matchAll(/<a /g)].length, 1, file);
+    assert.ok(header.includes('Phishing research'), file);
+    assert.ok(header.includes('<nav class="crumb" aria-label="Breadcrumb">'), file);
+    assert.ok(header.includes('https://github.com/emdashcyber/phishing-detection-decision-models'), file);
+    assert.equal([...header.matchAll(/<a /g)].length, 3, file);
+    assert.ok(header.includes('id="theme-toggle"'), file);
   }
 });
 
-test('sitemap and robots list exactly the indexable pages', () => {
+test('sitemap lists exactly the indexable pages; robots.txt is owned by the root site', () => {
   const sitemap = read('../dist/sitemap.xml');
-  assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]), [`${SITE}/`, `${SITE}/${SLUG}/`]);
-  assert.ok(read('../dist/robots.txt').includes(`Sitemap: ${SITE}/sitemap.xml`));
+  assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]), [`${SITE}/${SLUG}/`]);
+  assert.ok(!existsSync(new URL('../dist/robots.txt', import.meta.url)));
 });
 
-test('only the theme script and JSON-LD ship; no third-party requests', () => {
-  for (const file of ['../dist/index.html', ARTICLE, '../dist/404.html']) {
+test('pages carry a script-src self CSP and no inline scripts', () => {
+  for (const file of [ARTICLE, NOT_FOUND]) {
     const html = read(file);
-    const scripts = [...html.matchAll(/<script\b([^>]*)>/g)].map((m) => m[1]);
-    for (const attrs of scripts) assert.ok(/src="\/theme\.js"/.test(attrs) || /application\/ld\+json/.test(attrs), attrs);
-    assert.ok(!/(?:src|href)="https?:\/\/(?!huggingface\.co|zenodo\.org|doi\.org|emdashcyber\.com)/.test(html), file);
+    const csp = meta(html, 'http-equiv', 'Content-Security-Policy');
+    assert.ok(csp?.includes("script-src 'self'"), file);
+    assert.ok(!csp.includes("script-src 'self' 'unsafe-inline'"), file);
+    for (const [, attrs, body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
+      if (/application\/ld\+json/.test(attrs)) continue;
+      assert.ok(/\bsrc="/.test(attrs) && body.trim() === '', `inline script in ${file}`);
+    }
+  }
+});
+
+test('only local scripts and JSON-LD ship; no third-party requests', () => {
+  for (const file of [ARTICLE, NOT_FOUND]) {
+    const html = read(file);
+    const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
+    for (const [, attrs] of scripts) {
+      if (/application\/ld\+json/.test(attrs)) continue;
+      const src = attrs.match(/\bsrc="([^"]+)"/)?.[1];
+      assert.ok(src, attrs);
+      assert.equal(new URL(src, SITE).origin, new URL(SITE).origin, src);
+      assert.ok(src === `/${SLUG}/theme.js` || src.startsWith(`/${SLUG}/_astro/`), src);
+      assert.ok(existsSync(deployedFile(src)), src);
+    }
+    assert.ok(!/(?:src|href)="https?:\/\/(?!huggingface\.co|zenodo\.org|doi\.org|emdashcyber\.com|github\.com)/.test(html), file);
   }
   const js = read('../dist/theme.js');
-  assert.ok(js.includes('emdash-theme') && js.length < 2000);
+  assert.ok(js.includes('emdash-theme') && js.length < 3000);
+});
+
+test('article contents navigation uses the DMARC sidebar layout', () => {
+  const html = read(ARTICLE);
+  const toc = html.match(/<aside class="toc">([\s\S]*?)<\/aside>/)?.[1] ?? '';
+  assert.ok(toc.includes('aria-label="On this page"'));
+  for (const id of ['methodology', 'results', 'errors', 'confidence', 'cost', 'reliability', 'shortlist', 'limitations', 'reproduce']) {
+    assert.ok(toc.includes(`href="#${id}"`), id);
+  }
+  const css = read('../src/styles/global.css');
+  assert.ok(css.includes('grid-template-columns: 13rem minmax(0, 1fr)'));
+  assert.ok(css.includes('.toc nav { position: sticky; top: 5rem; }'));
+  assert.ok(css.includes('@media (max-width: 1099px)'));
+  assert.ok(css.includes('.wide { width: 100%; max-width: var(--content); margin-inline: 0; }'));
 });
 
 test('internal links and anchors resolve', () => {
   const html = read(ARTICLE);
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
   for (const m of html.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.has(m[1]), `#${m[1]}`);
-  for (const file of ['../dist/index.html', ARTICLE, '../dist/404.html']) {
+  for (const file of [ARTICLE, NOT_FOUND]) {
     for (const m of read(file).matchAll(/(?:href|src)="(\/[^"#]*)(?:#[^"]*)?"/g)) {
       const p = m[1];
-      const target = p.endsWith('/') ? `../dist${p}index.html` : `../dist${p}`;
-      assert.ok(existsSync(new URL(target, import.meta.url)), p);
+      assert.ok(existsSync(deployedFile(p)), p);
     }
   }
 });
 
 test('404 is noindex and carries no article metadata', () => {
-  const missing = read('../dist/404.html');
+  const missing = read(NOT_FOUND);
   assert.ok(missing.includes('content="noindex"'));
   assert.ok(!missing.includes('rel="canonical"'));
   assert.ok(!missing.includes('og:type'));
   assert.ok(!missing.includes('property="og:image"'));
   assert.ok(missing.includes(`href="/${SLUG}/"`));
+  assert.ok(missing.includes('class="hero"'));
+  assert.ok(missing.includes('class="eyebrow">404</p>'));
+  assert.ok(missing.includes('<h1 id="not-found-title">Page not found</h1>'));
 });
 
-test('theme toggle exists, is hidden without script and is a labelled button', () => {
+test('theme toggle is visible, labelled and uses the shared theme script', () => {
   const html = read(ARTICLE);
-  assert.match(html, /<button id="theme-toggle"[^>]*aria-pressed="false"[^>]*hidden/);
-  assert.ok(html.includes('class="skip" href="#main"'));
+  assert.match(html, /<button id="theme-toggle"[^>]*aria-pressed="false"/);
+  assert.ok(!html.match(/<button id="theme-toggle"[^>]*hidden/));
+  assert.ok(html.includes('class="skip-link" href="#main"'));
   assert.ok(html.includes('id="main"'));
 });
 
@@ -203,7 +244,7 @@ test('light and dark palettes meet WCAG contrast', () => {
   const css = read('../src/styles/global.css');
   const tokens = Object.fromEntries([...css.matchAll(/--([\w-]+):\s*light-dark\((#[0-9a-f]{6}),\s*(#[0-9a-f]{6})\)/g)].map((m) => [m[1], [m[2], m[3]]]));
   const pairs = [
-    ['fg', 'bg', 4.5], ['fg', 'surface', 4.5], ['heading', 'bg', 4.5], ['muted', 'bg', 4.5], ['muted', 'surface', 4.5],
+    ['text', 'bg', 4.5], ['text', 'surface', 4.5], ['muted', 'bg', 4.5], ['muted', 'surface', 4.5],
     ['accent', 'bg', 4.5], ['accent', 'surface', 4.5], ['accent-ink', 'accent', 4.5],
     ['miss', 'bg', 3], ['false-alarm', 'bg', 3], ['miss', 'surface', 3], ['false-alarm', 'surface', 3],
     ...['jev', 'openai', 'clef', 'flash', 'ms'].flatMap((k) => [[`c-${k}`, 'bg', 3], ['bg', `c-${k}`, 4.5]]),

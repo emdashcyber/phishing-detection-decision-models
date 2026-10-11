@@ -1,10 +1,11 @@
 ---
-import Post from '../layouts/Post.astro';
+import Base from '../layouts/Base.astro';
 import ResultsTable from '../components/ResultsTable.astro';
 import IntervalChart from '../components/IntervalChart.astro';
 import ErrorChart from '../components/ErrorChart.astro';
 import AgreementChart from '../components/AgreementChart.astro';
 import CostLatencyScatter from '../components/CostLatencyScatter.astro';
+import Toc from '../components/Toc.astro';
 import { models, byKey, agreement, totals, fmt } from '../lib/data';
 import { SITE_NAME, AUTHOR, ARTICLE_PATH, PUBLISHED, OG_IMAGE, abs, organization, author } from '../lib/site';
 
@@ -17,6 +18,17 @@ const sole = agreement.soleMiss;
 const gap = Math.round((flash.accuracy - openai.accuracy) * 1000);
 const spread = ((flash.accuracy - ms.accuracy) * 100).toFixed(1);
 const url = abs(ARTICLE_PATH);
+const toc = [
+  { id: 'methodology', label: 'Methodology' },
+  { id: 'results', label: 'Results' },
+  { id: 'errors', label: 'Failure patterns' },
+  { id: 'confidence', label: 'Confidence' },
+  { id: 'cost', label: 'Cost & latency' },
+  { id: 'reliability', label: 'Reliability' },
+  { id: 'shortlist', label: 'Choosing a model' },
+  { id: 'limitations', label: 'Limitations' },
+  { id: 'reproduce', label: 'Reproduce it' },
+];
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -57,7 +69,7 @@ const jsonLd = {
 };
 ---
 
-<Post
+<Base
   title={title}
   seoTitle={seoTitle}
   description={description}
@@ -67,9 +79,9 @@ const jsonLd = {
   imageAlt={`Accuracy of five decision models on 1,000 emails, from ${fmt.pct(ms.accuracy)} to ${fmt.pct(flash.accuracy)}.`}
   jsonLd={jsonLd}
 >
-  <article>
+  <header class="hero" aria-labelledby="article-title">
     <p class="eyebrow">Research / Email security</p>
-    <h1>{title}</h1>
+    <h1 id="article-title">{title}</h1>
 
     <p class="lede">
       I sent the same 1,000 emails, 500 phishing and 500 legitimate, to five <em>decision models</em> and asked one question: is this phishing?
@@ -86,7 +98,11 @@ const jsonLd = {
     <p class="lede">
       The goal is not to determine whether decision models can replace existing email security systems, but to understand how they compare with each other across accuracy, confidence calibration, speed and cost.
     </p>
+  </header>
 
+  <div class="layout">
+    <Toc items={toc} />
+    <article class="article">
     <section class="tldr" aria-labelledby="tldr">
       <h2 id="tldr">The findings at a glance</h2>
       <ul>
@@ -94,21 +110,6 @@ const jsonLd = {
         <li><strong>Cheap had a caveat.</strong> {ms.short} had the lowest recorded cost, but returned {ms.rateLimitAttempts} HTTP 429s across {ms.rateLimitedPairs} emails. All recovered on retry.</li>
       </ul>
     </section>
-
-    <nav class="contents" aria-labelledby="contents-title">
-      <h2 id="contents-title">In this article</h2>
-      <ol>
-        <li><a href="#methodology">Methodology</a></li>
-        <li><a href="#results">Results</a></li>
-        <li><a href="#patterns">Failure patterns</a></li>
-        <li><a href="#confidence">Confidence</a></li>
-        <li><a href="#cost">Cost &amp; latency</a></li>
-        <li><a href="#reliability">Reliability</a></li>
-        <li><a href="#shortlist">Choosing a model</a></li>
-        <li><a href="#limitations">Limitations</a></li>
-        <li><a href="#reproduce">Reproduce it</a></li>
-      </ol>
-    </nav>
 
     <h2 id="methodology">My testing methodology</h2>
     <p>
@@ -377,4 +378,5 @@ const jsonLd = {
       The runner is a single Python script, get the code from <a href="https://github.com/emdashcyber/phishing-detection-decision-models">https://github.com/emdashcyber/phishing-detection-decision-models</a>
     </p>
   </article>
-</Post>
+  </div>
+</Base>

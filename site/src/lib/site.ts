@@ -1,4 +1,4 @@
-const configuredSite = import.meta.env.SITE ?? 'https://emdashcyber.github.io';
+const configuredSite = import.meta.env.SITE ?? 'https://emdashcyber.com';
 const configuredBase = import.meta.env.BASE_URL ?? '/';
 
 export const SITE = configuredSite.replace(/\/+$/, '');
@@ -22,7 +22,7 @@ export const ARTICLE_PATH = BASE_URL;
 export const PUBLISHED = '2026-10-10';
 export const OG_IMAGE = '/social-preview.png';
 
-const siteRoot = abs('/');
+const siteRoot = `${SITE}/`;
 
 export const organization = {
   '@type': 'Organization',

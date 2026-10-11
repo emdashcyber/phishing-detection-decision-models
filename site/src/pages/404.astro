@@ -1,9 +1,12 @@
 ---
-import Post from '../layouts/Post.astro';
+import Base from '../layouts/Base.astro';
 import { ARTICLE_PATH } from '../lib/site';
 ---
 
-<Post title="Page not found | EmDash Cyber" description="This page does not exist." kind="error">
-  <h1>Page not found</h1>
-  <p>That page doesn't exist. <a href={ARTICLE_PATH}>Read the phishing decision-model benchmark</a>.</p>
-</Post>
+<Base title="Page not found | EmDash Cyber" description="This page does not exist." kind="error">
+  <section class="hero" aria-labelledby="not-found-title">
+    <p class="eyebrow">404</p>
+    <h1 id="not-found-title">Page not found</h1>
+    <p class="lede">That page doesn't exist. <a href={ARTICLE_PATH}>Read the phishing decision-model benchmark</a>.</p>
+  </section>
+</Base>

@@ -1,9 +1,8 @@
-import { readFileSync, copyFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import sharp from 'sharp';
 
 const pub = (f) => new URL(`../public/${f}`, import.meta.url);
 const mark = readFileSync(pub('emdash-mark.svg'));
-copyFileSync(pub('emdash-mark.svg'), pub('favicon.svg'));
 
 // Full-bleed square for the apple-touch icon, since iOS fills transparency with black.
 const fullBleed = Buffer.from(

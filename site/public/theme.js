@@ -1,37 +1,69 @@
 (function () {
   var root = document.documentElement;
-  var KEY = 'emdash-theme';
-  var stored = null;
-  try { stored = localStorage.getItem(KEY); } catch (e) {}
-  if (stored === 'light' || stored === 'dark') root.setAttribute('data-theme', stored);
+  var storageKey = 'emdash-theme';
+  var darkPreference = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  var savedTheme = null;
+  var button = null;
 
-  var dark = window.matchMedia('(prefers-color-scheme: dark)');
-  var current = function () { return root.getAttribute('data-theme') || (dark.matches ? 'dark' : 'light'); };
+  try {
+    var saved = window.localStorage.getItem(storageKey);
+    if (saved === 'light' || saved === 'dark') savedTheme = saved;
+  } catch (error) {
+    // Keep using the device preference when storage is unavailable.
+  }
 
-  // theme-color metas cannot follow data-theme via CSS, so pin them to the active theme.
-  var paint = function () {
-    var t = current();
-    var metas = document.querySelectorAll('meta[name="theme-color"]');
-    for (var i = 0; i < metas.length; i++) {
-      metas[i].setAttribute('media', 'all');
-      metas[i].setAttribute('content', t === 'dark' ? '#0a1420' : '#ffffff');
-    }
+  var currentTheme = function () {
+    return savedTheme || (darkPreference && darkPreference.matches ? 'dark' : 'light');
   };
 
-  document.addEventListener('DOMContentLoaded', function () {
-    var btn = document.getElementById('theme-toggle');
-    if (!btn) return;
-    btn.hidden = false;
-    var sync = function () { btn.setAttribute('aria-pressed', current() === 'dark' ? 'true' : 'false'); };
-    sync();
-    if (stored) paint();
-    btn.addEventListener('click', function () {
-      var next = current() === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      try { localStorage.setItem(KEY, next); } catch (e) {}
-      sync();
-      paint();
+  var syncButton = function () {
+    if (button) button.setAttribute('aria-pressed', String(currentTheme() === 'dark'));
+  };
+
+  var applyTheme = function () {
+    var theme = currentTheme();
+    root.setAttribute('data-theme', theme);
+
+    var themeColors = document.querySelectorAll('meta[name="theme-color"]');
+    for (var i = 0; i < themeColors.length; i++) {
+      themeColors[i].setAttribute('media', 'all');
+      themeColors[i].setAttribute('content', theme === 'dark' ? '#0d1117' : '#fcfcfb');
+    }
+
+    syncButton();
+  };
+
+  var attachButton = function () {
+    button = document.getElementById('theme-toggle');
+    if (!button) return;
+
+    syncButton();
+    button.addEventListener('click', function () {
+      savedTheme = currentTheme() === 'dark' ? 'light' : 'dark';
+      try {
+        window.localStorage.setItem(storageKey, savedTheme);
+      } catch (error) {
+        // The selected theme still applies for this page view.
+      }
+      applyTheme();
     });
-    dark.addEventListener('change', function () { if (!root.getAttribute('data-theme')) sync(); });
-  });
+  };
+
+  applyTheme();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachButton);
+  } else {
+    attachButton();
+  }
+
+  if (darkPreference) {
+    var followDeviceTheme = function () {
+      if (!savedTheme) applyTheme();
+    };
+    if (darkPreference.addEventListener) {
+      darkPreference.addEventListener('change', followDeviceTheme);
+    } else if (darkPreference.addListener) {
+      darkPreference.addListener(followDeviceTheme);
+    }
+  }
 })();
